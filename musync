@@ -1,0 +1,51 @@
+#!/usr/bin/python
+import os
+ROUTER=0 #set it to 1 if you have a router and configure static ip for all the devices on your local network
+HOSTNAME=[] #fill them manually in case you have multiple devices and a router, no need to fill if you don't
+USERNAME=[] # in absence of a router only single device can be synced the one that is the hotspot
+PORT=[] #ssh port on corresponding devices
+PATH=['~/storage/shared/Music'] #respective paths to folders in corresponding devices that are to be synced
+SOURCE='/run/media/nikhil/New\ Volume/Music/*' #single source of truth on host device
+DELETE_SYNC=0 # if set to 1 the files deleted on main machine will also be deleted everywhere
+
+if ROUTER==0:
+    os.system("netstat -rn>gateway")
+    f=open("gateway").readlines()
+    lines=len(f)
+    if lines<3:
+        print("No device connected right now, EXITING")
+        exit()
+    l3=f[2].strip().split()
+    HOSTNAME.append(l3[1])
+    USERNAME.append('u0_a119')#change it accordingly, default in termux
+    PORT.append(8022)
+
+ok=((len(HOSTNAME)==len(USERNAME)) and (len(USERNAME)==len(PORT)))
+ok&=(len(PORT)==len(PATH))
+if ok==0:
+    print("Script not configured properly exiting")
+
+sz=len(HOSTNAME)
+for i in range(sz):
+    host=HOSTNAME[i]
+    port=PORT[i]
+    user=USERNAME[i]
+    src=SOURCE
+    dest=PATH[i]
+    delete="--delete"
+    if DELETE_SYNC==0:
+        delete=""
+    s=f"rsync -r {delete} -e 'ssh -o \"StrictHostKeyChecking=no\" -p {port}' {SOURCE} {user}@{host}:{dest}"
+    os.system(s)
+    print("synced successfully")
+
+
+
+
+
+
+
+
+    
+
+
